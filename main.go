@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// The Main State of the simulator. I learnt it from Bubble Tea's docs. They call it Elm Structure
+// React also seems to use similar architecture
 type model struct {
 	Aura        int
 	Temperature int
@@ -13,6 +16,9 @@ type model struct {
 	Logs        []string
 }
 
+type TickMsg time.Time
+
+// Suggest some better UI changes y'all
 func (m model) View() string {
 	s := "PROJECT ZERO KELVIN\n----------\n"
 
@@ -29,6 +35,7 @@ func (m model) View() string {
 	return s
 }
 
+// I guess this can be called the LOGIC part of the code. What to update and under which conditions should the update occur
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -46,6 +53,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func waitForNextTick() tea.Cmd {
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg { return TickMsg(t) })
+}
+
+// The Command to be executed as soon as program starts is written here
 func (m model) Init() tea.Cmd {
 	return nil
 }
