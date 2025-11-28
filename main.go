@@ -5,6 +5,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	lipgloss "github.com/charmbracelet/lipgloss"
 )
 
 // The Main State of the simulator. I learnt it from Bubble Tea's docs. They call it Elm Structure
@@ -20,19 +21,56 @@ type TickMsg time.Time
 
 // Suggest some better UI changes y'all
 func (m model) View() string {
-	s := "PROJECT ZERO KELVIN\n----------\n"
 
-	s += fmt.Sprintf("Temperature: %d C \nAura: %d\nDiscipline: %d\n----------\n", m.Temperature, m.Aura, m.Discipline)
+	// THE LIPGLOSS
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#FFFFFF")).
+		Background(lipgloss.Color("#4D4DFF")).
+		Padding(0, 1).
+		MarginBottom(1).
+		Width(50).
+		Align(lipgloss.Center)
 
-	s += "Log: \n"
+	statsStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#00FFFF")).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#00FFFF")).
+		Padding(0, 1).
+		MarginBottom(1).
+		Width(48).
+		Align(lipgloss.Center)
 
-	for log := range m.Logs {
-		s += fmt.Sprintf("%s\n", m.Logs[log])
+	logStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#5C5C5C")).
+		Width(48).
+		Height(5).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#444444")).
+		Padding(0, 1)
 
+	// THE RENDERING LOGIC
+	title := titleStyle.Render("PROJECT ZERO KELVIN\n")
+
+	stats := statsStyle.Render(fmt.Sprintf(
+		"TEMP: %d C  |  AURA: %d  |  DISC: %d",
+		m.Temperature, m.Aura, m.Discipline,
+	))
+
+	logstr := "LOGS:\n"
+	for _, l := range m.Logs {
+		logstr += l + "\n"
 	}
+	history := logStyle.Render(logstr)
 
-	s += "Press c to Cold Plunge and q to exit"
-	return s
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		title,
+		stats,
+		history,
+		"\nPress 'c' to Plunge. 'q' to quit",
+	)
 }
 
 // I guess this can be called the LOGIC part of the code. What to update and under which conditions should the update occur
@@ -49,7 +87,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Discipline += 1
 			m.Logs = append(m.Logs, "Did a cold plunge. Stay Hard")
 
-			if len(m.Logs) > 4 {
+			if len(m.Logs) > 5 {
 				m.Logs = m.Logs[1:]
 			}
 		}
