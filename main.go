@@ -48,11 +48,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Temperature -= 3
 			m.Discipline += 1
 			m.Logs = append(m.Logs, "Did a cold plunge. Stay Hard")
+
+			if len(m.Logs) > 4 {
+				m.Logs = m.Logs[1:]
+			}
 		}
 		return m, nil
 
 	case TickMsg:
-		m.Temperature -= 1
+		m.Temperature += 1
 		m.Discipline -= 1
 
 		return m, waitForTick()
@@ -62,7 +66,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func waitForTick() tea.Cmd {
-	return tea.Tick(time.Second * 2, func(t time.Time) tea.Msg { return TickMsg(t) })
+	return tea.Tick(time.Second*2, func(t time.Time) tea.Msg { return TickMsg(t) })
 }
 
 // The Command to be executed as soon as program starts is written here
