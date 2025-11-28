@@ -22,7 +22,7 @@ type TickMsg time.Time
 func (m model) View() string {
 	s := "PROJECT ZERO KELVIN\n----------\n"
 
-	s += fmt.Sprintf("Temperature: %d C \nAura: %d C\nDiscipline: %d C \n----------\n", m.Temperature, m.Aura, m.Discipline)
+	s += fmt.Sprintf("Temperature: %d C \nAura: %d C\nDiscipline: %d\n----------\n", m.Temperature, m.Aura, m.Discipline)
 
 	s += "Log: \n"
 
@@ -48,18 +48,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Temperature -= 3
 			m.Logs = append(m.Logs, "Did a cold plunge. Stay Hard")
 		}
+		return m, nil
+
+	case TickMsg:
+		m.Temperature -= 1
+		m.Discipline -= 1
+
+		return m, waitForTick()
 	}
 
 	return m, nil
 }
 
-func waitForNextTick() tea.Cmd {
+func waitForTick() tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg { return TickMsg(t) })
 }
 
 // The Command to be executed as soon as program starts is written here
 func (m model) Init() tea.Cmd {
-	return nil
+	return waitForTick()
 }
 
 func main() {
