@@ -101,7 +101,7 @@ func viewWin(m model) string {
 }
 
 // Suggest some better UI changes y'all
-func (m model) View() string {
+func viewDashboard(m model) string {
 
 	// THE LIPGLOSS
 	titleStyle := lipgloss.NewStyle().
@@ -151,7 +151,19 @@ func (m model) View() string {
 		stats,
 		history,
 		"\nPress 'c' to Plunge. 'q' to quit",
-	)
+	) + "\n"
+}
+
+func (m model) View() string {
+	switch m.State {
+	case StateWon:
+		return viewWin(m)
+	case StateGameOver:
+		return viewGameOver(m)
+	default:
+		return viewDashboard(m)
+	}
+
 }
 
 // I guess this can be called the LOGIC part of the code. What to update and under which conditions should the update occur
