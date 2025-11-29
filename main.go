@@ -179,7 +179,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "c":
 			m.Aura += 10
 			m.Temperature -= 5
-			m.Will += 2
+			m.Will -= 1
 			m.Logs = append(m.Logs, "Did a cold plunge. Stay Hard")
 
 			if len(m.Logs) > 5 {
@@ -197,12 +197,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "r":
 			m.Aura += 3
-			m.Will += 50
+			m.Will += 20
+			if m.Will > 100 {
+				m.Will = 100
+			}
 			m.Logs = append(m.Logs, "Knowledge Acquired. Focus restored")
 
 			if len(m.Logs) > 5 {
 				m.Logs = m.Logs[1:]
 			}
+
 		}
 		return m, nil
 
