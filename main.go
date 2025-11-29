@@ -34,6 +34,72 @@ const (
 
 type TickMsg time.Time
 
+func viewGameOver(m model) string {
+
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.DoubleBorder()).
+		BorderForeground(lipgloss.Color("#FF0000")).
+		Padding(1, 3).
+		Align(lipgloss.Center).
+		Width(50)
+
+	headerStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).
+		Bold(true).
+		Blink(true).
+		PaddingBottom(1)
+
+	textStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#CC6666"))
+
+	reason := "WEAKNESS DETECTED"
+	if m.Temperature > 60 {
+		reason = "You Got Softened by Warmth of Luxury"
+	} else if m.Temperature < SafeTemp {
+		reason = "You caugh frostbite"
+	} else if m.Discipline < 0 {
+		reason = "You forgot your motives and installed League Of Legends"
+	}
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		headerStyle.Render("YOU FAILED"),
+		textStyle.Render(reason),
+		textStyle.Render(fmt.Sprintf("FINAL AURA: %d", m.Aura)),
+		"\n[ Press q to quit ]",
+	)
+
+	return boxStyle.Render(content) + "\n"
+}
+
+func viewWin(m model) string {
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.ThickBorder()).
+		BorderForeground(lipgloss.Color("#FFD700")).
+		Padding(1, 3).
+		Align(lipgloss.Center).
+		Width(50)
+
+	headerStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#00FFFF")).
+		Background(lipgloss.Color("#000000")).
+		Bold(true).
+		Padding(0, 1).
+		MarginBottom(1)
+
+	textStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FFFFFF"))
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		headerStyle.Render("WINTER ARC CONQUERED!"),
+		textStyle.Render("You are Great Alpha Male now"),
+		"\n"+textStyle.Render(fmt.Sprintf("LEGENDARY AURA: %d", m.Aura)),
+		"\n[ Press q to accept destiny ]\n",
+	)
+
+	return boxStyle.Render(content) + "\n"
+}
+
 // Suggest some better UI changes y'all
 func (m model) View() string {
 
