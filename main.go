@@ -17,6 +17,7 @@ type model struct {
 	Days        int      //The Amount of days passed
 	Progress    int      //The Amount of time in a day that has passed
 	Logs        []string //IDK If we needs TS. But might look cool
+	State       int      //To track state of game like Playing, Lost or Victory
 }
 
 const (
@@ -24,6 +25,11 @@ const (
 	MaxDays     = 90   //The amount of days you need to survive
 	WinAura     = 5000 //The required amt of AURA needed to win the game after 5 days
 	SafeTemp    = 30   //If model.Temperature goes below 30, the player freezes(game over)
+
+	// States of game.. IDK why I am writing these dumb ahh comments tho
+	StatePlaying  = 0
+	StateGameOver = 1
+	StateWon      = 2
 )
 
 type TickMsg time.Time
