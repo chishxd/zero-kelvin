@@ -35,19 +35,19 @@ const (
 type TickMsg time.Time
 
 func viewGameOver(m model) string {
-
+	//Styling for the borders of container
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.DoubleBorder()).
 		BorderForeground(lipgloss.Color("#FF0000")).
 		Padding(1, 3).
 		Align(lipgloss.Center).
 		Width(50)
-
+	// Styling for big header
 	headerStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).
 		Bold(true).
 		Blink(true).
 		PaddingBottom(1)
-
+	// Smol Text
 	textStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#CC6666"))
 
@@ -71,6 +71,7 @@ func viewGameOver(m model) string {
 	return boxStyle.Render(content) + "\n"
 }
 
+// The Render Logic for Victory screen
 func viewWin(m model) string {
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.ThickBorder()).
@@ -191,6 +192,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Temperature++
 		m.Discipline--
 		m.Progress++
+
 		if m.Progress > TicksPerDay {
 			m.Progress = 0
 			m.Days += 1
@@ -199,10 +201,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(m.Logs) > 5 {
 				m.Logs = m.Logs[1:]
 			}
-
 		}
 
-		return m, waitForTick()
+		if m.Temperature > 75 || m.Temperature < SafeTemp || m.Discipline <= 0 {
+			m.State = StateGameOver
+		}
+
+		if m.Days >= MaxDays && m.Aura >= WinAura {
+			m.State = StateWon
+		}
+
+		if m.State == StatePlaying {
+			return m, waitForTick()
+		}
+
+		return m, nil
 	}
 
 	return m, nil
