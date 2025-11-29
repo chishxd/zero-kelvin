@@ -13,16 +13,18 @@ import (
 type model struct {
 	Aura        int      //CAN YOU FIX THE BROKEN, CAN YOU FEEL MY HEARRTTT
 	Temperature int      //The Body Temperature of the character, You lose if temp goes below 30 or above 75
-	Will        int      //Might be action based and choice based
+	Will        int      //THE HAKI POWAAAA
 	Days        int      //The Amount of days passed
 	Progress    int      //The Amount of time in a day that has passed
 	Logs        []string //IDK If we needs TS. But might look cool
 	State       int      //To track state of game like Playing, Lost or Victory
+	BusyTimer   int      //The amount of time player can't do any other stuff
+	BusyTask    string   //Name of the task
 }
 
 const (
-	TicksPerDay = 5    //The amount of ticks that make a day
-	MaxDays     = 90   //The amount of days you need to survive
+	TicksPerDay = 12   //The amount of ticks that make a day
+	MaxDays     = 30   //The amount of days you need to survive
 	WinAura     = 5000 //The required amt of AURA needed to win the game after 5 days
 	SafeTemp    = 30   //If model.Temperature goes below 30, the player freezes(game over)
 
@@ -172,10 +174,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Is Msg a KeyPress?
 	case tea.KeyMsg:
+		if msg.String() == "q" || msg.String() == "ctrl+c" {
+			return m, tea.Quit
+		}
+		if m.BusyTimer > 0 {
+			return m, nil
+		}
 		// A'ight, then what is it?
 		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
+		// case "ctrl+c", "q":
+		// 	return m, tea.Quit
+
 		case "c":
 			m.Aura += 10
 			m.Temperature -= 5
@@ -185,10 +194,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(m.Logs) > 5 {
 				m.Logs = m.Logs[1:]
 			}
+
 		case "g":
 			m.Aura += 100
 			m.Temperature += 5
 			m.Will -= 5
+			m.BusyTimer = 1
+			m.BusyTask = "LIFTING WEIGHTS..."
+
 			m.Logs = append(m.Logs, "Lifted Heavy Weights. Feels PEAK")
 
 			if len(m.Logs) > 5 {
@@ -223,6 +236,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			if len(m.Logs) > 5 {
 				m.Logs = m.Logs[1:]
+			}
+		}
+
+		if m.BusyTimer > 0 {
+			m.BusyTimer--
+			if m.BusyTimer == 0 {
+				m.BusyTask = ""
+				m.Logs = append(m.Logs, "Action Complete.")
 			}
 		}
 
