@@ -43,7 +43,7 @@ func viewGameOver(m model) string {
 		BorderForeground(lipgloss.Color("#FF0000")).
 		Padding(1, 3).
 		Align(lipgloss.Center).
-		Width(50)
+		Width(80)
 	// Styling for big header
 	headerStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).
 		Bold(true).
@@ -134,6 +134,9 @@ func viewDashboard(m model) string {
 		BorderForeground(lipgloss.Color("#444444")).
 		Padding(0, 1)
 
+	busyStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#f1cb0cff"))
 	// THE RENDERING LOGIC
 	title := titleStyle.Render("PROJECT ZERO KELVIN\n")
 
@@ -148,12 +151,19 @@ func viewDashboard(m model) string {
 	}
 	history := logStyle.Render(logstr)
 
+	var footer string
+	if m.BusyTimer > 0 {
+		footer = busyStyle.Render("[" + m.BusyTask + "]")
+	} else {
+		footer = "\n[c] Plunge | [g] Gym | [r] Read | [q] Quit"
+	}
+
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		title,
 		stats,
 		history,
-		"\n[c] Plunge | [g] Gym | [r] Read | [q] Quit",
+		footer,
 	) + "\n"
 }
 
@@ -189,6 +199,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Aura += 10
 			m.Temperature -= 5
 			m.Will -= 1
+			m.BusyTimer = 0
+			m.BusyTask = "PLUNGED..."
 			m.Logs = append(m.Logs, "Did a cold plunge. Stay Hard")
 
 			if len(m.Logs) > 5 {
@@ -214,6 +226,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.Will > 100 {
 				m.Will = 100
 			}
+			m.BusyTimer = 1
+			m.BusyTask = "READING..."
+
 			m.Logs = append(m.Logs, "Knowledge Acquired. Focus restored")
 
 			if len(m.Logs) > 5 {
