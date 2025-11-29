@@ -45,7 +45,7 @@ func renderProgBar(current, max int, color string) string {
 
 	perct := float64(current) / float64(max)
 
-	filled := min(int(perct * width), width)
+	filled := min(int(perct*width), width)
 
 	if filled < 0 {
 		filled = 0
@@ -149,10 +149,9 @@ func viewDashboard(m model) string {
 		Foreground(lipgloss.Color("#00FFFF")).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#00FFFF")).
-		Padding(0, 1).
+		Padding(1).
 		MarginBottom(1).
-		Width(48).
-		Align(lipgloss.Center)
+		Width(48)
 
 	logStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#5C5C5C")).
@@ -165,13 +164,28 @@ func viewDashboard(m model) string {
 	busyStyle := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color("#f1cb0cff"))
+
 	// THE RENDERING LOGIC
+
 	title := titleStyle.Render("PROJECT ZERO KELVIN\n")
 
-	stats := statsStyle.Render(fmt.Sprintf(
-		"DAY: %d | TEMP: %d C  |  AURA: %d  |  WILL: %d",
-		m.Days, m.Temperature, m.Aura, m.Will,
-	))
+	tempBar := renderProgBar(m.Temperature, 70, "#FF0000")
+	willBar := renderProgBar(m.Will, 100, "#00FFFF")
+
+	topRow := fmt.Sprintf("DAY: %d	|	Aura: %d ", m.Days, m.Aura)
+
+	tempRow := fmt.Sprintf("Temp: %s %d", tempBar, m.Temperature)
+	willRow := fmt.Sprintf("Will: %s %d", willBar, m.Will)
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Left,
+		topRow,
+		"\n",
+		tempRow,
+		willRow,
+	)
+
+	stats := statsStyle.Render(content)
 
 	logstr := "LOGS:\n"
 	for _, l := range m.Logs {
@@ -229,11 +243,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Will -= 1
 			m.BusyTimer = 0
 			m.BusyTask = "PLUNGED..."
-			m.Logs = append(m.Logs, "Did a cold plunge. Stay Hard")
-
-			if len(m.Logs) > 5 {
-				m.Logs = m.Logs[1:]
-			}
+			m.addLog("Did a cold plunge. Stay Hard")
 
 		case "g":
 			m.Aura += 100
@@ -242,11 +252,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.BusyTimer = 1
 			m.BusyTask = "LIFTING WEIGHTS..."
 
-			m.Logs = append(m.Logs, "Lifted Heavy Weights. Feels PEAK")
-
-			if len(m.Logs) > 5 {
-				m.Logs = m.Logs[1:]
-			}
+			m.addLog("Lifted Heavy Weights. Feels PEAK")
 
 		case "r":
 			m.Aura += 3
@@ -257,11 +263,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.BusyTimer = 1
 			m.BusyTask = "READING..."
 
-			m.Logs = append(m.Logs, "Knowledge Acquired. Focus restored")
-
-			if len(m.Logs) > 5 {
-				m.Logs = m.Logs[1:]
-			}
+			m.addLog("Knowledge Acquired. Focus restored")
 
 		}
 		return m, nil
@@ -275,18 +277,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.Progress > TicksPerDay {
 			m.Progress = 0
 			m.Days += 1
-			m.Logs = append(m.Logs, "Day "+fmt.Sprint(m.Days)+" begins.")
-
-			if len(m.Logs) > 5 {
-				m.Logs = m.Logs[1:]
-			}
+			m.addLog("Day " + fmt.Sprint(m.Days) + " begins.")
 		}
 
 		if m.BusyTimer > 0 {
 			m.BusyTimer--
 			if m.BusyTimer == 0 {
 				m.BusyTask = ""
-				m.Logs = append(m.Logs, "Action Complete.")
+				m.addLog("Action Complete")
 			}
 		}
 
@@ -310,6 +308,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func waitForTick() tea.Cmd {
 	return tea.Tick(time.Second*2, func(t time.Time) tea.Msg { return TickMsg(t) })
+}
+
+func (m *model) addLog(msg string) {
+	m.Logs = append(m.Logs, msg)
+	if len(m.Logs) > 5 {
+		m.Logs = m.Logs[1:]
+	}
 }
 
 // The Command to be executed as soon as program starts is written here
