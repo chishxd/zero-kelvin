@@ -36,6 +36,34 @@ const (
 
 type TickMsg time.Time
 
+func renderProgBar(current, max int, color string) string {
+	const width = 20
+
+	if max == 0 {
+		max = 1
+	}
+
+	perct := float64(current) / float64(max)
+
+	filled := min(int(perct * width), width)
+
+	if filled < 0 {
+		filled = 0
+	}
+
+	bar := ""
+
+	for i := 0; i < filled; i++ {
+		bar += "█"
+	}
+	for i := filled; i < width; i++ {
+		bar += "░"
+	}
+
+	return lipgloss.NewStyle().Foreground(lipgloss.Color(color)).Render(bar)
+
+}
+
 func viewGameOver(m model) string {
 	//Styling for the borders of container
 	boxStyle := lipgloss.NewStyle().
