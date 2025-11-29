@@ -8,14 +8,23 @@ import (
 	lipgloss "github.com/charmbracelet/lipgloss"
 )
 
-// The Main State of the simulator. I learnt it from Bubble Tea's docs. They call it Elm Structure
+// The Main State of the simulator. I learnt it from Bubble Tea's docs. They call it Elm Architecture
 // React also seems to use similar architecture
 type model struct {
-	Aura        int
-	Temperature int
-	Discipline  int
-	Logs        []string
+	Aura        int      //CAN YOU FIX THE BROKEN, CAN YOU FEEL MY HEARRTTT
+	Temperature int      //The Body Temperature of the character, You lose if temp goes below 30 or above 75
+	Discipline  int      //Might be action based and choice based
+	Days        int      //The Amount of days passed
+	Progress    int      //The Amount of time in a day that has passed
+	Logs        []string //IDK If we needs TS. But might look cool
 }
+
+const (
+	TicksPerDay = 5    //The amount of ticks that make a day
+	MaxDays     = 90   //The amount of days you need to survive
+	WinAura     = 5000 //The required amt of AURA needed to win the game after 5 days
+	SafeTemp    = 30   //If model.Temperature goes below 30, the player freezes(game over)
+)
 
 type TickMsg time.Time
 
@@ -54,8 +63,8 @@ func (m model) View() string {
 	title := titleStyle.Render("PROJECT ZERO KELVIN\n")
 
 	stats := statsStyle.Render(fmt.Sprintf(
-		"TEMP: %d C  |  AURA: %d  |  DISC: %d",
-		m.Temperature, m.Aura, m.Discipline,
+		"DAY: %d | TEMP: %d C  |  AURA: %d  |  DISC: %d",
+		m.Days, m.Temperature, m.Aura, m.Discipline,
 	))
 
 	logstr := "LOGS:\n"
@@ -76,13 +85,14 @@ func (m model) View() string {
 // I guess this can be called the LOGIC part of the code. What to update and under which conditions should the update occur
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	// Is Msg a KeyPress?
 	case tea.KeyMsg:
-
+		// A'ight, then what is it?
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "c":
-			m.Aura += 100
+			m.Aura += 50
 			m.Temperature -= 3
 			m.Discipline += 1
 			m.Logs = append(m.Logs, "Did a cold plunge. Stay Hard")
@@ -94,8 +104,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case TickMsg:
-		m.Temperature += 1
-		m.Discipline -= 1
+		m.Temperature++
+		m.Discipline--
+		m.Progress++
+		if m.Progress > TicksPerDay {
+			m.Progress = 0
+			m.Days += 1
+			m.Logs = append(m.Logs, "Day "+fmt.Sprint(m.Days)+" begins.")
+
+			if len(m.Logs) > 5 {
+				m.Logs = m.Logs[1:]
+			}
+
+		}
 
 		return m, waitForTick()
 	}
@@ -117,6 +138,8 @@ func main() {
 		Aura:        0,
 		Temperature: 37,
 		Discipline:  10,
+		Days:        0,
+		Progress:    0,
 	}
 	p := tea.NewProgram(initialModel)
 
