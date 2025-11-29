@@ -13,7 +13,7 @@ import (
 type model struct {
 	Aura        int      //CAN YOU FIX THE BROKEN, CAN YOU FEEL MY HEARRTTT
 	Temperature int      //The Body Temperature of the character, You lose if temp goes below 30 or above 75
-	Discipline  int      //Might be action based and choice based
+	Will        int      //Might be action based and choice based
 	Days        int      //The Amount of days passed
 	Progress    int      //The Amount of time in a day that has passed
 	Logs        []string //IDK If we needs TS. But might look cool
@@ -56,7 +56,7 @@ func viewGameOver(m model) string {
 		reason = "You Got Softened by Warmth of Luxury"
 	} else if m.Temperature < SafeTemp {
 		reason = "You caugh frostbite"
-	} else if m.Discipline < 0 {
+	} else if m.Will < 0 {
 		reason = "You forgot your motives and installed League Of Legends"
 	}
 
@@ -136,8 +136,8 @@ func viewDashboard(m model) string {
 	title := titleStyle.Render("PROJECT ZERO KELVIN\n")
 
 	stats := statsStyle.Render(fmt.Sprintf(
-		"DAY: %d | TEMP: %d C  |  AURA: %d  |  DISC: %d",
-		m.Days, m.Temperature, m.Aura, m.Discipline,
+		"DAY: %d | TEMP: %d C  |  AURA: %d  |  WILL: %d",
+		m.Days, m.Temperature, m.Aura, m.Will,
 	))
 
 	logstr := "LOGS:\n"
@@ -151,7 +151,7 @@ func viewDashboard(m model) string {
 		title,
 		stats,
 		history,
-		"\nPress 'c' to Plunge. 'q' to quit",
+		"\n[c] Plunge | [g] Gym | [r] Read | [q] Quit",
 	) + "\n"
 }
 
@@ -177,10 +177,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "c":
-			m.Aura += 50
-			m.Temperature -= 3
-			m.Discipline += 1
+			m.Aura += 10
+			m.Temperature -= 5
+			m.Will += 2
 			m.Logs = append(m.Logs, "Did a cold plunge. Stay Hard")
+
+			if len(m.Logs) > 5 {
+				m.Logs = m.Logs[1:]
+			}
+		case "g":
+			m.Aura += 100
+			m.Temperature += 5
+			m.Will -= 5
+			m.Logs = append(m.Logs, "Lifted Heavy Weights. Feels PEAK")
+
+			if len(m.Logs) > 5 {
+				m.Logs = m.Logs[1:]
+			}
+
+		case "r":
+			m.Aura += 3
+			m.Will += 50
+			m.Logs = append(m.Logs, "Knowledge Acquired. Focus restored")
 
 			if len(m.Logs) > 5 {
 				m.Logs = m.Logs[1:]
@@ -188,9 +206,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	// So, A tick was received huh...
 	case TickMsg:
 		m.Temperature++
-		m.Discipline--
+		m.Will--
 		m.Progress++
 
 		if m.Progress > TicksPerDay {
@@ -203,7 +222,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		if m.Temperature > 75 || m.Temperature < SafeTemp || m.Discipline <= 0 {
+		if m.Temperature > 60 || m.Temperature < SafeTemp || m.Will <= 0 {
 			m.State = StateGameOver
 		}
 
@@ -234,7 +253,7 @@ func main() {
 	initialModel := model{
 		Aura:        0,
 		Temperature: 37,
-		Discipline:  10,
+		Will:        10,
 		Days:        0,
 		Progress:    0,
 	}
