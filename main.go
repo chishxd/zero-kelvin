@@ -41,10 +41,10 @@ type GameEvent struct {
 }
 
 const (
-	TicksPerDay = 12  //The amount of ticks that make a day
-	MaxDays     = 5   //The amount of days you need to survive
-	WinAura     = 500 //The required amt of AURA needed to win the game after 5 days
-	SafeTemp    = 30  //If model.Temperature goes below 30, the player freezes(game over)
+	TicksPerDay = 12   //The amount of ticks that make a day
+	MaxDays     = 30   //The amount of days you need to survive
+	WinAura     = 2000 //The required amt of AURA needed to win the game after 5 days
+	SafeTemp    = 30   //If model.Temperature goes below 30, the player freezes(game over)
 
 	// States of game.. IDK why I am writing these dumb ahh comments tho
 	StatePlaying  = 0
@@ -87,6 +87,48 @@ func getRndEvent() GameEvent {
 			OptionB:   "Open the windows (Sub-zero only)",
 			A_TempMod: 10, A_WillMod: -30, A_AuraMod: -500,
 			B_TempMod: -5, B_WillMod: 30, B_AuraMod: 300,
+		},
+		{
+			Prompt:    "It is 3 AM. The Bed Looks soft and warm.",
+			OptionA:   "Sleep on Bed (Recovery)",
+			OptionB:   "Sleep on Floor",
+			A_TempMod: 5, A_WillMod: 5, A_AuraMod: -50,
+			B_TempMod: -2, B_WillMod: -5, B_AuraMod: 150,
+		},
+		{
+			Prompt:    "It is snowing. You need to go to the Gym",
+			OptionA:   "Wear Puffer Jacket",
+			OptionB:   "Tank Top Only",
+			A_TempMod: 5, A_WillMod: 0, A_AuraMod: -100,
+			B_TempMod: -10, B_WillMod: -20, B_AuraMod: 600,
+		},
+		{
+			Prompt:    "Your friends invite you to a Holiday Party",
+			OptionA:   "GO with them",
+			OptionB:   "Focus on yourself",
+			A_TempMod: 3, A_WillMod: -10, A_AuraMod: -300,
+			B_TempMod: 0, B_WillMod: 10, B_AuraMod: 400,
+		},
+		{
+			Prompt:    "Your Ex texts you: 'I miss you'",
+			OptionA:   "Reply",
+			OptionB:   "Block & Lift",
+			A_TempMod: 2, A_WillMod: -50, A_AuraMod: -1000,
+			B_TempMod: 1, B_WillMod: 50, B_AuraMod: 500,
+		},
+		{
+			Prompt:    "You have 1 hour of free time",
+			OptionA:   "Scroll Tik Tok",
+			OptionB:   "Stare at black wall",
+			A_TempMod: 1, A_WillMod: -10, A_AuraMod: -200,
+			B_TempMod: 0, B_WillMod: 50, B_AuraMod: 500,
+		},
+		{
+			Prompt:    "You stubbed you toe on a dumbbell",
+			OptionA:   "Scream",
+			OptionB:   "Silence",
+			A_TempMod: 1, A_WillMod: -10, A_AuraMod: -50,
+			B_TempMod: 0, B_WillMod: 20, B_AuraMod: 500,
 		},
 	}
 
