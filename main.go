@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,17 +12,32 @@ import (
 // The Main State of the simulator. I learnt it from Bubble Tea's docs. They call it Elm Architecture
 // React also seems to use similar architecture
 type model struct {
-	Aura        int      //CAN YOU FIX THE BROKEN, CAN YOU FEEL MY HEARRTTT
-	Temperature int      //The Body Temperature of the character, You lose if temp goes below 30 or above 75
-	Will        int      //THE HAKI POWAAAA
-	Days        int      //The Amount of days passed
-	Progress    int      //The Amount of time in a day that has passed
-	Logs        []string //IDK If we needs TS. But might look cool
-	State       int      //To track state of game like Playing, Lost or Victory
-	BusyTimer   int      //The amount of time player can't do any other stuff
-	BusyTask    string   //Name of the task
-	Width       int
-	Height      int
+	Aura         int      //CAN YOU FIX THE BROKEN, CAN YOU FEEL MY HEARRTTT
+	Temperature  int      //The Body Temperature of the character, You lose if temp goes below 30 or above 75
+	Will         int      //THE HAKI POWAAAA
+	Days         int      //The Amount of days passed
+	Progress     int      //The Amount of time in a day that has passed
+	Logs         []string //IDK If we needs TS. But might look cool
+	State        int      //To track state of game like Playing, Lost or Victory
+	BusyTimer    int      //The amount of time player can't do any other stuff
+	BusyTask     string   //Name of the task
+	CurrentEvent GameEvent
+	Width        int
+	Height       int
+}
+
+type GameEvent struct {
+	Prompt  string
+	OptionA string
+	OptionB string
+
+	A_TempMod int
+	A_WillMod int
+	A_AuraMod int
+
+	B_TempMod int
+	B_WillMod int
+	B_AuraMod int
 }
 
 const (
@@ -35,6 +51,7 @@ const (
 	StateGameOver = 1
 	StateWon      = 2
 	StateMenu     = 3
+	StateEvent    = 4
 )
 
 const Logo = `
@@ -47,6 +64,34 @@ const Logo = `
 `
 
 type TickMsg time.Time
+
+func getRndEvent() GameEvent {
+	events := []GameEvent{
+		{
+			Prompt:    "Your GF is shivering. She asks for your hoodie",
+			OptionA:   "Give Hoodie (Warm her heart)",
+			OptionB:   "Refuse (Cold builds character)",
+			A_TempMod: -5, A_WillMod: -10, A_AuraMod: 50, // You get cold, lose will, but gain social aura?
+			B_TempMod: 0, B_WillMod: 20, B_AuraMod: 100, // Stay warm, huge will, massive aura
+		},
+		{
+			Prompt:    "Grandma cooked some cookies. Smells like love",
+			OptionA:   "Eat One",
+			OptionB:   "Don't eat(Reject sugar)",
+			A_TempMod: 2, A_WillMod: -20, A_AuraMod: -100,
+			B_TempMod: 0, B_WillMod: 50, B_AuraMod: 200,
+		},
+		{
+			Prompt:    "The heater is fixed. The room is 22°C.",
+			OptionA:   "Enjoy the warmth",
+			OptionB:   "Open the windows (Sub-zero only)",
+			A_TempMod: 10, A_WillMod: -30, A_AuraMod: -500,
+			B_TempMod: -5, B_WillMod: 30, B_AuraMod: 300,
+		},
+	}
+
+	return events[rand.Intn(len(events))]
+}
 
 func renderProgBar(current, max int, color string) string {
 	const width = 20
@@ -178,6 +223,29 @@ func viewWin(m model) string {
 	return boxStyle.Render(content) + "\n"
 }
 
+func viewEvent(m model) string {
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.ThickBorder()).
+		BorderForeground(lipgloss.Color("#FF00FF")).
+		Padding(1, 3).
+		Align(lipgloss.Center)
+
+	promptStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#FFFFFF")).
+		MarginBottom(1)
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		promptStyle.Render("TEST OF WILL!"),
+		"\n"+m.CurrentEvent.Prompt+"\n",
+		"[ a ]"+m.CurrentEvent.OptionA+"\n",
+		"[ a ]"+m.CurrentEvent.OptionB+"\n",
+	)
+
+	return boxStyle.Render(content)
+}
+
 // Suggest some better UI changes y'all
 func viewDashboard(m model) string {
 
@@ -263,6 +331,8 @@ func (m model) View() string {
 	switch m.State {
 	case StateMenu:
 		content = viewMenu()
+	case StateEvent:
+		content = viewEvent(m)
 	case StateWon:
 		content = viewWin(m)
 	case StateGameOver:
@@ -350,6 +420,13 @@ func (m model) handleTick() (tea.Model, tea.Cmd) {
 	m.Temperature++
 	m.Will--
 	m.Progress++
+
+	if rand.Intn(100) < 10 {
+		m.State = StateEvent
+		m.CurrentEvent = getRndEvent()
+		return m, nil
+	}
+
 	// INCREMENT DAY
 	if m.Progress > TicksPerDay {
 		m.Progress = 0
