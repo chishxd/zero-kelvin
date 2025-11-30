@@ -20,6 +20,8 @@ type model struct {
 	State       int      //To track state of game like Playing, Lost or Victory
 	BusyTimer   int      //The amount of time player can't do any other stuff
 	BusyTask    string   //Name of the task
+	Width       int
+	Height      int
 }
 
 const (
@@ -210,14 +212,27 @@ func viewDashboard(m model) string {
 }
 
 func (m model) View() string {
+
+	var content string
+
 	switch m.State {
 	case StateWon:
-		return viewWin(m)
+		content = viewWin(m)
 	case StateGameOver:
-		return viewGameOver(m)
+		content = viewGameOver(m)
 	default:
-		return viewDashboard(m)
+		content = viewDashboard(m)
 	}
+
+	if m.Width == 0 {
+		return content
+	}
+
+	return lipgloss.Place(
+		m.Width, m.Height,
+		lipgloss.Center, lipgloss.Center,
+		content,
+	)
 
 }
 
@@ -234,8 +249,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		// A'ight, then what is it?
 		switch msg.String() {
-		// case "ctrl+c", "q":
-		// 	return m, tea.Quit
 
 		case "c":
 			m.Aura += 10
@@ -273,13 +286,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Temperature++
 		m.Will--
 		m.Progress++
-
+		// INCREMENT DAY
 		if m.Progress > TicksPerDay {
 			m.Progress = 0
 			m.Days += 1
 			m.addLog("Day " + fmt.Sprint(m.Days) + " begins.")
 		}
 
+		// REDUCE BUSYTIMER ON EVERY TICK
 		if m.BusyTimer > 0 {
 			m.BusyTimer--
 			if m.BusyTimer == 0 {
@@ -288,6 +302,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+		// CHANGING STATES
 		if m.Temperature > 60 || m.Temperature < SafeTemp || m.Will <= 0 {
 			m.State = StateGameOver
 		}
@@ -300,6 +315,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, waitForTick()
 		}
 
+		return m, nil
+
+	case tea.WindowSizeMsg:
+		m.Width = msg.Width
+		m.Height = msg.Height
 		return m, nil
 	}
 
