@@ -25,10 +25,10 @@ type model struct {
 }
 
 const (
-	TicksPerDay = 12   //The amount of ticks that make a day
-	MaxDays     = 30   //The amount of days you need to survive
-	WinAura     = 5000 //The required amt of AURA needed to win the game after 5 days
-	SafeTemp    = 30   //If model.Temperature goes below 30, the player freezes(game over)
+	TicksPerDay = 12  //The amount of ticks that make a day
+	MaxDays     = 5   //The amount of days you need to survive
+	WinAura     = 500 //The required amt of AURA needed to win the game after 5 days
+	SafeTemp    = 30  //If model.Temperature goes below 30, the player freezes(game over)
 
 	// States of game.. IDK why I am writing these dumb ahh comments tho
 	StatePlaying  = 0
@@ -142,7 +142,7 @@ func viewGameOver(m model) string {
 		headerStyle.Render("YOU FAILED"),
 		textStyle.Render(reason),
 		textStyle.Render(fmt.Sprintf("FINAL AURA: %d", m.Aura)),
-		"\n[ Press q to quit ]",
+		"\n[ [q] quit | [enter] Retry ]",
 	)
 
 	return boxStyle.Render(content) + "\n"
@@ -172,7 +172,7 @@ func viewWin(m model) string {
 		headerStyle.Render("WINTER ARC CONQUERED!"),
 		textStyle.Render("You are Great Alpha Male now"),
 		"\n"+textStyle.Render(fmt.Sprintf("LEGENDARY AURA: %d", m.Aura)),
-		"\n[ Press q to accept destiny ]\n",
+		"\n[ [q] quit | [enter] Retry ]",
 	)
 
 	return boxStyle.Render(content) + "\n"
