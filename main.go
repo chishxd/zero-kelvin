@@ -293,12 +293,16 @@ func viewEvent(m model) string {
 		Foreground(lipgloss.Color("#FFFFFF")).
 		MarginBottom(1)
 
+	diffA := formatStatDiff(m.CurrentEvent.A_TempMod, m.CurrentEvent.A_AuraMod, m.CurrentEvent.A_WillMod)
+	diffB := formatStatDiff(m.CurrentEvent.B_TempMod, m.CurrentEvent.B_AuraMod, m.CurrentEvent.B_WillMod)
+
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		promptStyle.Render("TEST OF WILL!"),
 		"\n"+m.CurrentEvent.Prompt+"\n",
-		"[ a ]"+m.CurrentEvent.OptionA+"\n",
-		"[ b ]"+m.CurrentEvent.OptionB+"\n",
+		"[ a ]"+m.CurrentEvent.OptionA+diffA,
+		"[ b ]"+m.CurrentEvent.OptionB+diffB,
+		"\n",
 	)
 
 	return boxStyle.Render(content)
@@ -504,17 +508,17 @@ func (m model) handleTick() (tea.Model, tea.Cmd) {
 	m.Will--
 	m.Progress++
 
-	if rand.Intn(100) < 10 {
-		m.State = StateEvent
-		m.CurrentEvent = getRndEvent()
-		return m, nil
-	}
-
 	// INCREMENT DAY
 	if m.Progress > TicksPerDay {
 		m.Progress = 0
 		m.Days += 1
 		m.addLog("Day " + fmt.Sprint(m.Days) + " begins.")
+
+		if rand.Intn(100) < 10 {
+			m.State = StateEvent
+			m.CurrentEvent = getRndEvent()
+			return m, nil
+		}
 	}
 
 	// REDUCE BUSYTIMER ON EVERY TICK
