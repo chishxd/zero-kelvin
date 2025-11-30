@@ -248,34 +248,13 @@ func (m model) handleKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "c":
-			m.performAction("PLUNGED", 10, -5, -1, 0, "Did a cold plunge. Stay Hard")
-			m.Aura += 10
-			m.Temperature -= 5
-			m.Will -= 1
-			m.BusyTimer = 0
-			m.BusyTask = "PLUNGED..."
-			m.addLog("Did a cold plunge. Stay Hard")
+			return m.performAction("PLUNGED", 10, -5, -1, 0, "Did a cold plunge. Stay Hard")
 
 		case "g":
-			m.Aura += 100
-			m.Temperature += 5
-			m.Will -= 5
-			m.BusyTimer = 1
-			m.BusyTask = "LIFTING WEIGHTS..."
-
-			m.addLog("Lifted Heavy Weights. Feels PEAK")
+			return m.performAction("LIFTING", 100, 5, -5, 1, "Lifted Heavy Weights. Feels PEAK")
 
 		case "r":
-			m.Aura += 3
-			m.Will += 20
-			if m.Will > 100 {
-				m.Will = 100
-			}
-			m.BusyTimer = 1
-			m.BusyTask = "READING..."
-
-			m.addLog("Knowledge Acquired. Focus restored")
-
+			return m.performAction("READING", 1, 0, 20, 1, "Knowledge Acquired. Focus restored")
 		}
 	}
 	return m, nil
