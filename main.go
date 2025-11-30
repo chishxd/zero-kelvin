@@ -248,6 +248,7 @@ func (m model) handleKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "c":
+			m.performAction("PLUNGED", 10, -5, -1, 0, "Did a cold plunge. Stay Hard")
 			m.Aura += 10
 			m.Temperature -= 5
 			m.Will -= 1
@@ -312,6 +313,23 @@ func (m model) handleTick() (tea.Model, tea.Cmd) {
 	if m.State == StatePlaying {
 		return m, waitForTick()
 	}
+
+	return m, nil
+}
+
+func (m model) performAction(taskName string, auraMod, tempMod, willMod, busyTime int, logMsg string) (tea.Model, tea.Cmd) {
+	m.Aura += auraMod
+	m.Temperature += tempMod
+	m.Will += willMod
+
+	if m.Will > 100 {
+		m.Will = 100
+	}
+
+	m.BusyTask = taskName
+	m.BusyTimer = busyTime
+
+	m.addLog(logMsg)
 
 	return m, nil
 }
