@@ -34,7 +34,17 @@ const (
 	StatePlaying  = 0
 	StateGameOver = 1
 	StateWon      = 2
+	StateMenu     = 3
 )
+
+const Logo = `
+███████╗███████╗██████╗  ██████╗     ██╗  ██╗███████╗██╗     ██╗   ██╗██╗███╗   ██╗
+╚══███╔╝██╔════╝██╔══██╗██╔═══██╗    ██║ ██╔╝██╔════╝██║     ██║   ██║██║████╗  ██║
+  ███╔╝ █████╗  ██████╔╝██║   ██║    █████╔╝ █████╗  ██║     ██║   ██║██║██╔██╗ ██║
+ ███╔╝  ██╔══╝  ██╔══██╗██║   ██║    ██╔═██╗ ██╔══╝  ██║     ╚██╗ ██╔╝██║██║╚██╗██║
+███████╗███████╗██║  ██║╚██████╔╝    ██║  ██╗███████╗███████╗ ╚████╔╝ ██║██║ ╚████║
+╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝     ╚═╝  ╚═╝╚══════╝╚══════╝  ╚═══╝  ╚═╝╚═╝  ╚═══╝
+`
 
 type TickMsg time.Time
 
@@ -64,6 +74,41 @@ func renderProgBar(current, max int, color string) string {
 
 	return lipgloss.NewStyle().Foreground(lipgloss.Color(color)).Render(bar)
 
+}
+
+func viewMenu() string {
+	logoStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#4D4DFF")).Bold(true)
+
+	subStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#00FFFF")).MarginBottom(2)
+
+	instrStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#888888")).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#4D4DFF")).
+		Padding(1, 2).
+		Align(lipgloss.Left)
+
+	instructions := `
+GOAL: Survive 30 Days without losing
+
+[c] Cold Plunge  ::  Cools you down.
+[g] Gym          ::  Gains Aura (Heat Risk).
+[r] Read         ::  Restores Willpower.
+
+WARNING: Do not reach 0 Will, 30- Temp or 60+ Temp.
+	`
+
+	prompt := "\n[ PRESS ENTER TO BEGIN ]\n"
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		logoStyle.Render(Logo),
+		subStyle.Render("THE ULTIMTE WINTER ARC SIMULATOR"),
+		instrStyle.Render(instructions),
+		prompt,
+	)
+
+	return content
 }
 
 func viewGameOver(m model) string {
@@ -216,6 +261,8 @@ func (m model) View() string {
 	var content string
 
 	switch m.State {
+	case StateMenu:
+		content = viewMenu()
 	case StateWon:
 		content = viewWin(m)
 	case StateGameOver:
@@ -236,10 +283,49 @@ func (m model) View() string {
 
 }
 
+// All Working logic is handled here
+
+func (m model) performAction(taskName string, auraMod, tempMod, willMod, busyTime int, logMsg string) (tea.Model, tea.Cmd) {
+	m.Aura += auraMod
+	m.Temperature += tempMod
+	m.Will += willMod
+
+	if m.Will > 100 {
+		m.Will = 100
+	}
+
+	m.BusyTask = taskName
+	m.BusyTimer = busyTime
+
+	m.addLog(logMsg)
+
+	return m, nil
+}
+
 func (m model) handleKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if msg.String() == "q" || msg.String() == "ctrl+c" {
 		return m, tea.Quit
 	}
+
+	if m.State == StateMenu {
+		if msg.String() == "enter" {
+			m.State = StatePlaying
+			m.Aura = 0
+			m.Temperature = 37
+			m.Will = 10
+			m.Days = 0
+			m.Progress = 0
+			m.Logs = []string{"Winter has arrived. Stay Strong"}
+			return m, waitForTick()
+		}
+	}
+
+	if m.State == StateGameOver || m.State == StateWon {
+		if msg.String() == "enter" {
+			m.State = StateMenu
+		}
+	}
+
 	if m.State == StatePlaying {
 		if m.BusyTimer > 0 {
 			return m, nil
@@ -296,23 +382,6 @@ func (m model) handleTick() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) performAction(taskName string, auraMod, tempMod, willMod, busyTime int, logMsg string) (tea.Model, tea.Cmd) {
-	m.Aura += auraMod
-	m.Temperature += tempMod
-	m.Will += willMod
-
-	if m.Will > 100 {
-		m.Will = 100
-	}
-
-	m.BusyTask = taskName
-	m.BusyTimer = busyTime
-
-	m.addLog(logMsg)
-
-	return m, nil
-}
-
 // I guess this can be called the LOGIC part of the code. What to update and under which conditions should the update occur
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -356,6 +425,7 @@ func main() {
 		Will:        10,
 		Days:        0,
 		Progress:    0,
+		State:       StateMenu,
 	}
 	p := tea.NewProgram(initialModel)
 
