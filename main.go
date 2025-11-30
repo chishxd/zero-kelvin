@@ -505,8 +505,17 @@ func (m model) handleKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m model) handleTick() (tea.Model, tea.Cmd) {
 	m.Temperature++
-	m.Will--
 	m.Progress++
+
+	decay := 1
+	if m.Days > 15 {
+		decay = 2
+	}
+	if m.Days > 25 {
+		decay = 3
+	}
+
+	m.Will -= decay
 
 	// INCREMENT DAY
 	if m.Progress > TicksPerDay {
