@@ -236,14 +236,11 @@ func (m model) View() string {
 
 }
 
-// I guess this can be called the LOGIC part of the code. What to update and under which conditions should the update occur
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	// Is Msg a KeyPress?
-	case tea.KeyMsg:
-		if msg.String() == "q" || msg.String() == "ctrl+c" {
-			return m, tea.Quit
-		}
+func (m model) handleKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if msg.String() == "q" || msg.String() == "ctrl+c" {
+		return m, tea.Quit
+	}
+	if m.State == StatePlaying {
 		if m.BusyTimer > 0 {
 			return m, nil
 		}
@@ -279,43 +276,56 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.addLog("Knowledge Acquired. Focus restored")
 
 		}
-		return m, nil
+	}
+	return m, nil
+}
+
+func (m model) handleTick() (tea.Model, tea.Cmd) {
+	m.Temperature++
+	m.Will--
+	m.Progress++
+	// INCREMENT DAY
+	if m.Progress > TicksPerDay {
+		m.Progress = 0
+		m.Days += 1
+		m.addLog("Day " + fmt.Sprint(m.Days) + " begins.")
+	}
+
+	// REDUCE BUSYTIMER ON EVERY TICK
+	if m.BusyTimer > 0 {
+		m.BusyTimer--
+		if m.BusyTimer == 0 {
+			m.BusyTask = ""
+			m.addLog("Action Complete")
+		}
+	}
+
+	// CHANGING STATES
+	if m.Temperature > 60 || m.Temperature < SafeTemp || m.Will <= 0 {
+		m.State = StateGameOver
+	}
+
+	if m.Days >= MaxDays && m.Aura >= WinAura {
+		m.State = StateWon
+	}
+
+	if m.State == StatePlaying {
+		return m, waitForTick()
+	}
+
+	return m, nil
+}
+
+// I guess this can be called the LOGIC part of the code. What to update and under which conditions should the update occur
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	// Is Msg a KeyPress?
+	case tea.KeyMsg:
+		return m.handleKeys(msg)
 
 	// So, A tick was received huh...
 	case TickMsg:
-		m.Temperature++
-		m.Will--
-		m.Progress++
-		// INCREMENT DAY
-		if m.Progress > TicksPerDay {
-			m.Progress = 0
-			m.Days += 1
-			m.addLog("Day " + fmt.Sprint(m.Days) + " begins.")
-		}
-
-		// REDUCE BUSYTIMER ON EVERY TICK
-		if m.BusyTimer > 0 {
-			m.BusyTimer--
-			if m.BusyTimer == 0 {
-				m.BusyTask = ""
-				m.addLog("Action Complete")
-			}
-		}
-
-		// CHANGING STATES
-		if m.Temperature > 60 || m.Temperature < SafeTemp || m.Will <= 0 {
-			m.State = StateGameOver
-		}
-
-		if m.Days >= MaxDays && m.Aura >= WinAura {
-			m.State = StateWon
-		}
-
-		if m.State == StatePlaying {
-			return m, waitForTick()
-		}
-
-		return m, nil
+		return m.handleTick()
 
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
