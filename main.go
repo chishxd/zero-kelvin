@@ -240,7 +240,7 @@ func viewEvent(m model) string {
 		promptStyle.Render("TEST OF WILL!"),
 		"\n"+m.CurrentEvent.Prompt+"\n",
 		"[ a ]"+m.CurrentEvent.OptionA+"\n",
-		"[ a ]"+m.CurrentEvent.OptionB+"\n",
+		"[ b ]"+m.CurrentEvent.OptionB+"\n",
 	)
 
 	return boxStyle.Render(content)
@@ -389,7 +389,6 @@ func (m model) handleKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, waitForTick()
 		}
 	}
-
 	if m.State == StateGameOver || m.State == StateWon {
 		if msg.String() == "enter" {
 			m.State = StateMenu
@@ -413,6 +412,28 @@ func (m model) handleKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m.performAction("READING", 1, 0, 20, 1, "Knowledge Acquired. Focus restored")
 		}
 	}
+
+	if m.State == StateEvent {
+		if msg.String() == "a" {
+			m.Temperature += m.CurrentEvent.A_TempMod
+			m.Aura += m.CurrentEvent.A_AuraMod
+			m.Will += m.CurrentEvent.A_WillMod
+			m.addLog("Chose: " + m.CurrentEvent.OptionA)
+
+			m.State = StatePlaying
+			return m, waitForTick()
+		}
+		if msg.String() == "b" {
+			m.Temperature += m.CurrentEvent.B_TempMod
+			m.Aura += m.CurrentEvent.B_AuraMod
+			m.Will += m.CurrentEvent.B_WillMod
+			m.addLog("Chose: " + m.CurrentEvent.OptionB)
+
+			m.State = StatePlaying
+			return m, waitForTick()
+		}
+	}
+
 	return m, nil
 }
 
