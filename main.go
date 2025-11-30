@@ -223,6 +223,22 @@ func viewWin(m model) string {
 	return boxStyle.Render(content) + "\n"
 }
 
+func formatStatDiff(temp, aura, will int) string {
+	s := ""
+
+	if temp != 0 {
+		s += fmt.Sprintf("[%+d Temp]", temp)
+	}
+	if aura != 0 {
+		s += fmt.Sprintf("[%+d Aura]", aura)
+	}
+	if will != 0 {
+		s += fmt.Sprintf("[%+d Will]", will)
+	}
+
+	return s
+}
+
 func viewEvent(m model) string {
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.ThickBorder()).
@@ -418,7 +434,9 @@ func (m model) handleKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.Temperature += m.CurrentEvent.A_TempMod
 			m.Aura += m.CurrentEvent.A_AuraMod
 			m.Will += m.CurrentEvent.A_WillMod
-			m.addLog("Chose: " + m.CurrentEvent.OptionA)
+
+			diffs := formatStatDiff(m.CurrentEvent.A_TempMod, m.CurrentEvent.A_AuraMod, m.CurrentEvent.A_WillMod)
+			m.addLog("Chose: " + m.CurrentEvent.OptionA + diffs)
 
 			m.State = StatePlaying
 			return m, waitForTick()
@@ -427,7 +445,9 @@ func (m model) handleKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.Temperature += m.CurrentEvent.B_TempMod
 			m.Aura += m.CurrentEvent.B_AuraMod
 			m.Will += m.CurrentEvent.B_WillMod
-			m.addLog("Chose: " + m.CurrentEvent.OptionB)
+
+			diffs := formatStatDiff(m.CurrentEvent.B_TempMod, m.CurrentEvent.B_AuraMod, m.CurrentEvent.B_WillMod)
+			m.addLog("Chose: " + m.CurrentEvent.OptionB + diffs)
 
 			m.State = StatePlaying
 			return m, waitForTick()
