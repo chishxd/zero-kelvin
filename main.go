@@ -595,7 +595,7 @@ func main() {
 	initialModel := model{
 		Aura:        0,
 		Temperature: 37,
-		Will:        10,
+		Will:        30,
 		Days:        0,
 		Progress:    0,
 		State:       StateMenu,
@@ -606,3 +606,10 @@ func main() {
 		fmt.Printf("Uh, oh... Seems like we have some error in the code: %v", err)
 	}
 }
+
+
+// LIPGLOSS WERE FUN TO WORK WITH
+// PERSONAL COMMENTS: It was fun working in Golang. Bubble Tea + Lipgloss are excellent
+// TO my Future Self: Why are you here bruh? Do smth better and REVOLTIONARY...
+
+// TS IS WEIRD. But I am finally checking out. I am done with this
