@@ -1,4 +1,4 @@
-module zero-kelvin
+module github.com/chishxd/zero-kelvin
 
 go 1.24.10
 
